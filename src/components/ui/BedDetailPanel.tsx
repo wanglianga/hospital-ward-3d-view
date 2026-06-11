@@ -35,6 +35,7 @@ export function BedDetailPanel() {
   const perspective = useWardStore((s) => s.perspective);
   const activeRoute = useWardStore((s) => s.activeRoute);
   const routeEndName = useWardStore((s) => s.routeEndName);
+  const routeStartBedId = useWardStore((s) => s.routeStartBedId);
 
   const [showTargetWards, setShowTargetWards] = useState(false);
 
@@ -54,7 +55,7 @@ export function BedDetailPanel() {
     bed.status !== 'empty' &&
     bed.status !== 'emergency';
 
-  const isCurrentRouteBed = activeRoute && bed.id === useWardStore.getState().routeStartBedId;
+  const isCurrentRouteBed = !!(activeRoute && bed.id === routeStartBedId);
 
   return (
     <div className="fixed top-20 right-4 z-30 w-80 animate-[slideIn_0.3s_ease-out] max-h-[calc(100vh-6rem)] overflow-y-auto">

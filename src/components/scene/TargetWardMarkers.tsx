@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Html, Billboard } from '@react-three/drei';
+import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useWardStore } from '@/store/useWardStore';
 import type { TargetWard } from '@/store/useWardStore';
@@ -38,7 +38,12 @@ function TargetMarker({ ward, isActive }: { ward: TargetWard; isActive: boolean 
         />
       </mesh>
 
-      <Billboard position={[0, 2.2, 0]}>
+      <Html
+        position={[0, 2.4, 0]}
+        center
+        distanceFactor={12}
+        zIndexRange={[15, 0]}
+      >
         <div
           className={`px-3 py-2 rounded-2xl shadow-xl text-center transition-all duration-300 ${
             isActive
@@ -46,7 +51,7 @@ function TargetMarker({ ward, isActive }: { ward: TargetWard; isActive: boolean 
               : 'bg-white/90 backdrop-blur-sm text-slate-700 border border-slate-200 hover:scale-105'
           }`}
         >
-          <div className="text-2xl mb-0.5">{ward.icon}</div>
+          <div className="text-2xl mb-0.5 leading-none">{ward.icon}</div>
           <div className={`text-xs font-bold ${isActive ? 'text-white' : 'text-slate-800'}`}>
             {ward.name}
           </div>
@@ -54,11 +59,11 @@ function TargetMarker({ ward, isActive }: { ward: TargetWard; isActive: boolean 
             病区入口
           </div>
         </div>
-      </Billboard>
+      </Html>
 
       {isActive && (
-        <mesh position={[0, 0.15, 0]}>
-          <coneGeometry args={[0.3, 0.8, 4]} />
+        <mesh position={[0, 0.45, 0]} rotation={[0, Math.PI / 4, 0]}>
+          <coneGeometry args={[0.3, 0.9, 4]} />
           <meshStandardMaterial
             color="#2196F3"
             emissive="#2196F3"
