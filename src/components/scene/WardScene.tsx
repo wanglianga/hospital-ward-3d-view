@@ -7,6 +7,7 @@ import { Rooms } from './Rooms';
 import { Beds } from './Beds';
 import { CorridorHeatmap } from './CorridorHeatmap';
 import { RouteLine } from './RouteLine';
+import { TargetWardMarkers } from './TargetWardMarkers';
 
 function CameraController() {
   const { camera } = useThree();
@@ -80,6 +81,7 @@ function SceneContent() {
       <Beds />
       <CorridorHeatmap />
       <RouteLine />
+      <TargetWardMarkers />
 
       <mesh
         position={[0, -5, 0]}

@@ -139,3 +139,11 @@ export const CORRIDOR_SEGMENTS: CorridorSegment[] = [
 ];
 
 export const EXAMINATION_ROOM_POSITION = { x: 18, z: -18 };
+
+export const TARGET_WARDS = [
+  { id: 'surgery', name: '外科病区', position: { x: 28, z: -18 }, icon: '🏥' },
+  { id: 'internal', name: '内科病区', position: { x: 28, z: 10 }, icon: '🩺' },
+  { id: 'icu', name: 'ICU 病区', position: { x: -28, z: 18 }, icon: '💊' },
+  { id: 'rehab', name: '康复病区', position: { x: -28, z: -10 }, icon: '🧘' },
+];
+
