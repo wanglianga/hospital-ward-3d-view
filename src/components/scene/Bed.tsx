@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import type { Bed as BedType } from '@/types';
 import { BED_STATUS_COLORS, BED_STATUS_LABELS } from '@/utils/colors';
 import { useWardStore } from '@/store/useWardStore';
+import { Clock, Timer } from 'lucide-react';
 
 interface BedProps {
   bed: BedType;
@@ -16,12 +17,23 @@ export function Bed({ bed }: BedProps) {
   const selectedBedId = useWardStore((s) => s.selectedBedId);
   const perspective = useWardStore((s) => s.perspective);
   const startRouteToExamination = useWardStore((s) => s.startRouteToExamination);
+  const getCleaningRemainingMinutes = useWardStore((s) => s.getCleaningRemainingMinutes);
+  const getCleaningProgress = useWardStore((s) => s.getCleaningProgress);
+  const now = useWardStore((s) => s.now);
 
   const isSelected = selectedBedId === bed.id;
   const color = BED_STATUS_COLORS[bed.status];
-  const now = Date.now();
   const isWillRelease = bed.willReleaseAt && bed.willReleaseAt - now < 7200000;
   const isCleaningHighPriority = bed.status === 'cleaning' && (bed.cleaningPriority || 0) >= 4;
+
+  const cleaningRemainingMinutes = useMemo(
+    () => getCleaningRemainingMinutes(bed.id),
+    [getCleaningRemainingMinutes, bed.id, now]
+  );
+  const cleaningProgress = useMemo(
+    () => getCleaningProgress(bed.id),
+    [getCleaningProgress, bed.id, now]
+  );
 
   const showHighlight = useMemo(() => {
     if (perspective === 'nurse' && isWillRelease) return true;
@@ -79,6 +91,23 @@ export function Bed({ bed }: BedProps) {
     (perspective === 'transporter' || perspective === 'global') &&
     bed.status !== 'empty' &&
     bed.status !== 'emergency';
+
+  const formatCleaningTime = (minutes: number): string => {
+    if (minutes >= 60) {
+      const hrs = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
+    }
+    return `${minutes}m`;
+  };
+
+  const getCleaningUrgencyColor = (remaining: number | null, progress: number): string => {
+    if (remaining === null) return '#FF9800';
+    if (remaining <= 5) return '#F44336';
+    if (remaining <= 15) return '#FF9800';
+    if (progress >= 80) return '#4CAF50';
+    return '#FF9800';
+  };
 
   return (
     <group position={[bed.position.x, bed.position.y, bed.position.z]}>
@@ -145,6 +174,39 @@ export function Bed({ bed }: BedProps) {
         )}
       </group>
 
+      {bed.status === 'cleaning' && cleaningRemainingMinutes !== null && (
+        <Html
+          position={[0, 1.5, 0]}
+          center
+          distanceFactor={14}
+          zIndexRange={[8, 0]}
+          style={{ pointerEvents: 'none' }}
+        >
+          <div className="flex flex-col items-center">
+            <div
+              className="text-[10px] font-bold px-2 py-1 rounded-lg shadow-md whitespace-nowrap flex items-center gap-1 border"
+              style={{
+                backgroundColor: `${getCleaningUrgencyColor(cleaningRemainingMinutes, cleaningProgress)}`,
+                color: 'white',
+                borderColor: `${getCleaningUrgencyColor(cleaningRemainingMinutes, cleaningProgress)}CC`,
+              }}
+            >
+              <Timer size={10} />
+              <span>清洁中 {formatCleaningTime(cleaningRemainingMinutes)}</span>
+            </div>
+            <div className="mt-1 w-14 h-1.5 bg-slate-200 rounded-full overflow-hidden shadow-inner">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${cleaningProgress}%`,
+                  backgroundColor: getCleaningUrgencyColor(cleaningRemainingMinutes, cleaningProgress),
+                }}
+              />
+            </div>
+          </div>
+        </Html>
+      )}
+
       {hovered && (
         <Html
           position={[0, 1.8, 0]}
@@ -166,6 +228,12 @@ export function Bed({ bed }: BedProps) {
                 {BED_STATUS_LABELS[bed.status]}
               </span>
             </div>
+            {bed.status === 'cleaning' && cleaningRemainingMinutes !== null && (
+              <div className="flex items-center gap-1.5 mb-1.5 text-orange-300">
+                <Clock size={12} />
+                <span>剩余清洁时间：{formatCleaningTime(cleaningRemainingMinutes)}</span>
+              </div>
+            )}
             {bed.patient?.name && (
               <div className="text-slate-300 flex items-center gap-1.5">
                 <span className="text-slate-500">患者</span>

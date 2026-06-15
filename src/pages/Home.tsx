@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { WardScene } from '@/components/scene/WardScene';
 import { PerspectiveSwitcher } from '@/components/ui/PerspectiveSwitcher';
 import { StatsCards } from '@/components/ui/StatsCards';
@@ -9,6 +10,14 @@ import { Activity, Info } from 'lucide-react';
 export default function Home() {
   const activeRoute = useWardStore((s) => s.activeRoute);
   const perspective = useWardStore((s) => s.perspective);
+  const tick = useWardStore((s) => s.tick);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      tick();
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [tick]);
 
   const perspectiveDescriptions: Record<string, string> = {
     global: '查看病区整体布局和所有床位状态',

@@ -36,6 +36,10 @@ export function BedDetailPanel() {
   const activeRoute = useWardStore((s) => s.activeRoute);
   const routeEndName = useWardStore((s) => s.routeEndName);
   const routeStartBedId = useWardStore((s) => s.routeStartBedId);
+  const getCleaningRemainingMinutes = useWardStore((s) => s.getCleaningRemainingMinutes);
+  const getCleaningProgress = useWardStore((s) => s.getCleaningProgress);
+  const storeNow = useWardStore((s) => s.now);
+  const isIsolationBed = useWardStore((s) => s.isIsolationBed);
 
   const [showTargetWards, setShowTargetWards] = useState(false);
 
@@ -44,11 +48,23 @@ export function BedDetailPanel() {
   if (!bed) return null;
 
   const statusColor = BED_STATUS_COLORS[bed.status];
-  const now = Date.now();
-  const isWillRelease = bed.willReleaseAt && bed.willReleaseAt - now < 7200000;
+  const isWillRelease = bed.willReleaseAt && bed.willReleaseAt - storeNow < 7200000;
   const minutesToRelease = bed.willReleaseAt
-    ? Math.max(0, Math.ceil((bed.willReleaseAt - now) / 60000))
+    ? Math.max(0, Math.ceil((bed.willReleaseAt - storeNow) / 60000))
     : 0;
+
+  const cleaningRemaining = getCleaningRemainingMinutes(bed.id);
+  const cleaningProgress = getCleaningProgress(bed.id);
+  const bedIsIsolation = isIsolationBed(bed.id);
+
+  const formatCleaningTime = (minutes: number): string => {
+    if (minutes >= 60) {
+      const hrs = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return mins > 0 ? `${hrs}小时${mins}分钟` : `${hrs}小时`;
+    }
+    return `${minutes}分钟`;
+  };
 
   const showRouteSection =
     (perspective === 'transporter' || perspective === 'global') &&
@@ -99,6 +115,45 @@ export function BedDetailPanel() {
                       />
                     ))}
                   </div>
+                </div>
+              )}
+              {bed.status === 'cleaning' && cleaningRemaining !== null && (
+                <div className="mt-2 p-3 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5 text-orange-700">
+                      <Clock size={14} />
+                      <span className="text-xs font-medium">清洁倒计时</span>
+                    </div>
+                    <span className="text-sm font-bold text-orange-600">
+                      {cleaningRemaining > 0 ? formatCleaningTime(cleaningRemaining) : '即将完成'}
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-orange-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        cleaningProgress >= 80
+                          ? 'bg-gradient-to-r from-green-400 to-emerald-500'
+                          : cleaningProgress >= 50
+                            ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
+                            : 'bg-gradient-to-r from-orange-400 to-red-500'
+                      }`}
+                      style={{ width: `${cleaningProgress}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between mt-1">
+                    <span className="text-[10px] text-slate-500">{Math.round(cleaningProgress)}% 完成</span>
+                    <span className="text-[10px] text-slate-500">
+                      {cleaningRemaining > 0
+                        ? `预计 ${formatCleaningTime(cleaningRemaining)} 后可接收新患者`
+                        : '可接收新患者'}
+                    </span>
+                  </div>
+                </div>
+              )}
+              {bedIsIsolation && (
+                <div className="flex items-center gap-1.5 text-xs mt-1.5 text-purple-600 bg-purple-50 px-2 py-1 rounded-lg w-fit">
+                  <ShieldAlert size={12} />
+                  <span className="font-medium">隔离患者 · 使用专用路线转运</span>
                 </div>
               )}
               {isCurrentRouteBed && (
